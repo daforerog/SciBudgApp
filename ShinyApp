@@ -1,0 +1,193 @@
+############################################
+# SciBudgApp                               #
+# Diego A. Forero, MD, PhD                 #
+# Twitter: @daforerog                      #
+# sites.google.com/site/diegoforerolab     #
+# daforerog@gmail.com                      #
+############################################
+
+library(shiny)
+library(shinythemes)
+
+
+####################################
+# User Interface                   #
+####################################
+ui <- fluidPage(theme = shinytheme("united"),
+                navbarPage("SciBudgApp: A Shiny App",
+                           
+                           tabPanel("Contrapartida en salarios",
+                                    # Input values
+                                    sidebarPanel(
+                                      HTML("<h4>Datos de salario y horas</h3>"),
+                                      numericInput("salario",
+                                                   label = "salario mensual",
+                                                   value = 5000000),
+                                      sliderInput("horas", 
+                                                  label = "horas semanales", 
+                                                  value = 5, 
+                                                  min = 2, 
+                                                  max = 10),
+                                      numericInput("meses",
+                                                   label = "meses de participación",
+                                                   value = 12),
+                                      numericInput("factorp",
+                                                   label = "factor prestacional",
+                                                   value = 1.52),
+                                      
+                                      actionButton("submitbutton", 
+                                                   "Enviar", 
+                                                   class = "btn btn-primary")
+                                    ),
+                                    
+                                    mainPanel(
+                                      tags$label(h3('Resultado')), # Status/Output Text Box
+                                      verbatimTextOutput('contents'),
+                                      tableOutput('tabledata') # Results table
+                                    ) # mainPanel()
+                                    
+                           ), #tabPanel(), Home
+                           
+                           
+                           tabPanel("Cálculo de costo de viajes",
+                                    # Input values
+                                    sidebarPanel(
+                                      HTML("<h4>Datos de salario y horas</h3>"),
+                                      numericInput("costotiq",
+                                                   label = "costo tiquetes",
+                                                   value = 1000000),
+                                      sliderInput("numdias", 
+                                                  label = "número de días", 
+                                                  value = 5, 
+                                                  min = 2, 
+                                                  max = 10),
+                                      numericInput("costohot",
+                                                   label = "costo de hotel por día",
+                                                   value = 200000),
+                                      numericInput("numviajes",
+                                                   label = "número de viajes",
+                                                   value = 2),
+                                      
+                                      actionButton("submitbutton2", 
+                                                   "Enviar", 
+                                                   class = "btn btn-primary")
+                                    ),
+                                    
+                                    mainPanel(
+                                      tags$label(h3('Resultado')), # Status/Output Text Box
+                                      verbatimTextOutput('contents2'),
+                                      tableOutput('tabledata2') # Results table
+                                    ) # mainPanel()
+                                    
+                           ), #tabPanel(), Home
+                           
+                           tabPanel("Contrapartida en equipos",
+                                    # Input values
+                                    sidebarPanel(
+                                      HTML("<h4>Costo del equipo</h3>"),
+                                      numericInput("costequipo",
+                                                   label = "costo del equipo",
+                                                   value = 5000000),
+                                      sliderInput("añosvida", 
+                                                  label = "vida útil del equipo en meses", 
+                                                  value = 36, 
+                                                  min = 24, 
+                                                  max = 60),
+                                      numericInput("usoequi",
+                                                   label = "tiempo de uso del equipo en meses",
+                                                   value = 12),
+
+                                      actionButton("submitbutton3", 
+                                                   "Enviar", 
+                                                   class = "btn btn-primary")
+                                    ),
+                                    
+                                    mainPanel(
+                                      tags$label(h3('Resultado')), # Status/Output Text Box
+                                      verbatimTextOutput('contents3'),
+                                      tableOutput('tabledata3') # Results table
+                                    ) # mainPanel()
+                                    
+                           ), #tabPanel(), Home
+                           
+                           tabPanel("About", 
+                                    titlePanel("Acerca de"), 
+                                    HTML("<h4>SciBudgApp es una Shiny App para calcular varios parámetros relacionados con presupuestos de proyectos de investigación</h4>"),
+                                    HTML("<h5>Shiny App creada por Diego Forero, MD, PhD</h5>"),
+                                    HTML("<h5>daforerog @ gmail.com</h5>"),
+                           ) #tabPanel(), About
+                           
+                ) # navbarPage()
+) # fluidPage()
+
+
+####################################
+# Server                           #
+####################################
+server <- function(input, output, session) {
+  
+  # Input Data
+  datasetInput <- reactive({  
+    
+    contrap <- ((input$salario*input$factorp)/160)*(input$horas*4*input$meses)
+    contrap <- data.frame(contrap)
+    names(contrap) <- "contrapartida total"
+    print(contrap)
+    
+  })
+  
+
+  # Prediction results table
+  output$tabledata <- renderTable({
+    if (input$submitbutton>0) { 
+      isolate(datasetInput()) 
+      
+      
+    } 
+  })
+  
+  datasetInput2 <- reactive({  
+    
+    costoviaj <- input$numviajes*((input$numdias*input$costohot)+input$costotiq)
+    costoviaj <- data.frame(costoviaj)
+    names(costoviaj) <- "costo total del viaje"
+    print(costoviaj)
+    
+  })
+  
+
+  # Prediction results table
+  output$tabledata2 <- renderTable({
+    if (input$submitbutton2>0) { 
+      isolate(datasetInput2()) 
+      
+      
+    } 
+  })
+  
+  datasetInput3 <- reactive({  
+    
+    costoequipos <- (input$costequipo/input$añosvida)*input$usoequi
+    costoequipos <- data.frame(costoequipos)
+    names(costoequipos) <- "contrapartida en equipos"
+    print(costoequipos)
+    
+  })
+  
+  
+  # Prediction results table
+  output$tabledata3 <- renderTable({
+    if (input$submitbutton3>0) { 
+      isolate(datasetInput3()) 
+      
+      
+    } 
+  })
+  
+}
+
+
+####################################
+# Create Shiny App                 #
+####################################
+shinyApp(ui = ui, server = server)
